@@ -40,7 +40,7 @@ var restrict = function(req, res, next) {
 
 
 app.get('/', restrict, function(req, res) {
-  console.log('inside / route');
+  res.render('index');
 });
 
 app.get('/create', restrict, function(req, res) {
@@ -88,6 +88,9 @@ app.post('/links', function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+/// Question for HiRs:
+// Why couldn't we access the res.headers property that the mocha test is checking??
+// it was null for us everywehre we logged it and in postman
 
 app.get('/login', function(req, res) {
   res.render('login');
@@ -98,15 +101,14 @@ app.post('/signup', function(req, res) {
     new User({username: req.body.username, password: req.body.password})
     .fetch().then(function(found) {
       if (found) {
-        res.status(200).send(found.attributes);
+        res.redirect('/');
       } else {
         Users.create({
           username: req.body.username,
           password: req.body.password
         })
         .then(function(newUser) {
-          console.log('response headers: ', res.headers);
-          res.status(200).send(newUser);
+          res.redirect('/');
         });
       }
     });
@@ -114,6 +116,7 @@ app.post('/signup', function(req, res) {
     res.sendStatus(404);
   }
 });
+
 
 
 /************************************************************/
