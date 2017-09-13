@@ -11,6 +11,7 @@ var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
+var session = require('express-session');
 var app = express();
 
 app.set('views', __dirname + '/views');
@@ -19,29 +20,41 @@ app.use(partials());
 // Parse JSON (uniform resource locators)
 app.use(bodyParser.json());
 // Parse forms (signup/login)
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: true}));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
+var restrict = function(req, res, next) {
+  // console.log('req session ', req.session.user)
+  if (req.session.user) {
+    next();
+  } else {
+    req.session.error = 'Access denied!';
+    // console.log('res.req: ', res.req)
+    res.redirect('/login');
+  }
+};
 
-app.get('/', 
-function(req, res) {
+
+app.get('/', restrict, function(req, res) {
+  console.log('inside / route');
+});
+
+app.get('/create', restrict, function(req, res) {
   res.render('index');
 });
 
-app.get('/create', 
-function(req, res) {
-  res.render('index');
-});
 
-app.get('/links', 
-function(req, res) {
+app.get('/links', restrict, function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.status(200).send(links.models);
   });
 });
 
-app.post('/links', 
-function(req, res) {
+app.post('/links', function(req, res) {
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -76,6 +89,31 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.get('/login', function(req, res) {
+  res.render('login');
+});
+
+app.post('/signup', function(req, res) {
+  if (req.body.username.length < 20 && req.body.password.length < 20) {
+    new User({username: req.body.username, password: req.body.password})
+    .fetch().then(function(found) {
+      if (found) {
+        res.status(200).send(found.attributes);
+      } else {
+        Users.create({
+          username: req.body.username,
+          password: req.body.password
+        })
+        .then(function(newUser) {
+          console.log('response headers: ', res.headers);
+          res.status(200).send(newUser);
+        });
+      }
+    });
+  } else {
+    res.sendStatus(404);
+  }
+});
 
 
 /************************************************************/
