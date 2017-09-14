@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var bcrypt = require('bcrypt-nodejs');
 
 
 var db = require('./app/config');
@@ -99,6 +100,7 @@ app.get('/signup', function(req, res) {
   res.render('signup');
 });
 
+
 app.post('/signup', function(req, res) {
   if (req.body.username.length < 20 && req.body.password.length < 20) {
     new User({username: req.body.username, password: req.body.password})
@@ -121,16 +123,33 @@ app.post('/signup', function(req, res) {
   }
 });
 
+
 app.post('/login', function(req, res) {
-  new User({username: req.body.username, password: req.body.password})
-  .fetch().then(function(found) {
-    if (found) {
-      req.session.user = req.body.username;
-      res.redirect('/');
-    } else {
-      res.redirect('/login');
+
+  new User({username: req.body.username})
+  .fetch().then(function(user) {
+    if (user) {
+      if (bcrypt.compareSync(req.body.password, user.attributes.password)) {
+        req.session.user = req.body.username;
+      }
     }
+    res.redirect('/');
   });
+
+  // new User({username: req.body.username, password: req.body.password})
+  // .fetch().then(function(found) {
+  //   if (found) {
+  //     req.session.user = req.body.username;
+  //     res.redirect('/');
+  //   } else {
+  //     res.redirect('/login');
+  //   }
+  // });
+});
+
+app.get('/logout', function(req, res) {
+  req.session.user = null;
+  res.redirect('/');
 });
 
 
