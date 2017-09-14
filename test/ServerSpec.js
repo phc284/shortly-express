@@ -72,7 +72,7 @@ describe('', function() {
       });
   });
 
-  xdescribe('Link creation:', function() {
+  describe('Link creation:', function() {
 
     var requestWithSession = request.defaults({jar: true});
 
@@ -216,6 +216,7 @@ describe('', function() {
         };
 
         requestWithSession(options, function(error, res, body) {
+          console.log('error: ', error, 'body: ', body);
           expect(body).to.include('"title":"Funny pictures of animals, funny dog pictures"');
           expect(body).to.include('"code":"' + link.get('code') + '"');
           done();

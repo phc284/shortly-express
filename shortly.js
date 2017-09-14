@@ -28,12 +28,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
 var restrict = function(req, res, next) {
-  // console.log('req session ', req.session.user)
   if (req.session.user) {
     next();
   } else {
     req.session.error = 'Access denied!';
-    // console.log('res.req: ', res.req)
     res.redirect('/login');
   }
 };
@@ -47,13 +45,14 @@ app.get('/create', restrict, function(req, res) {
   res.render('index');
 });
 
-
+//premade
 app.get('/links', restrict, function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.status(200).send(links.models);
   });
 });
 
+//premade
 app.post('/links', function(req, res) {
   var uri = req.body.url;
 
@@ -115,6 +114,18 @@ app.post('/signup', function(req, res) {
   } else {
     res.sendStatus(404);
   }
+});
+
+app.post('/login', function(req, res) {
+  new User({username: req.body.username, password: req.body.password})
+  .fetch().then(function(found) {
+    if (found) {
+      req.session.user = req.body.username;
+      res.redirect('/');
+    } else {
+      res.redirect('/login');
+    }
+  });
 });
 
 
