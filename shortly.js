@@ -95,6 +95,10 @@ app.get('/login', function(req, res) {
   res.render('login');
 });
 
+app.get('/signup', function(req, res) {
+  res.render('signup');
+});
+
 app.post('/signup', function(req, res) {
   if (req.body.username.length < 20 && req.body.password.length < 20) {
     new User({username: req.body.username, password: req.body.password})
@@ -107,6 +111,7 @@ app.post('/signup', function(req, res) {
           password: req.body.password
         })
         .then(function(newUser) {
+          req.session.user = req.body.username;
           res.redirect('/');
         });
       }
@@ -156,3 +161,11 @@ app.get('/*', function(req, res) {
 });
 
 module.exports = app;
+
+
+/*
+  - Make a logout button
+  - have it request to the server to strip the session.user
+  - then have it redirect to '/'
+
+*/
